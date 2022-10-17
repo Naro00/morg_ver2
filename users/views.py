@@ -1,7 +1,10 @@
+import jwt
+from django.conf import settings
+from django.contrib.auth import authenticate, login, logout
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from rest_framework.exceptions import ParseError
+from rest_framework.exceptions import ParseError, NotFound, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from users.models import User
 from . import serializers
@@ -33,9 +36,18 @@ class Me(APIView):
 class Users(APIView):
     def post(self, request):
         password = request.data.get("password")
+        password2 = request.data.get("password2")
         if not password:
             raise ParseError
-        serializer = serializers.SingupUserSerializer(data=request.data)
+        if len(password) < 8:
+            raise ValidationError(
+                "This password is too short. It must contain at least 8 character.")
+        if password.isdigit():
+            raise ValidationError(
+                "This password is entirely numeric")
+        if password != password2:
+            raise ValidationError("Passwords not equal.")
+        serializer = serializers.PrivateUserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             user.set_password(password)
@@ -44,3 +56,90 @@ class Users(APIView):
             return Response(serializer.data)
         else:
             return Response(serializer.errors)
+
+
+class PublicUser(APIView):
+
+    def get(self, request, username):
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise NotFound
+        serializer = serializers.Publicserializer(user)
+        return Response(serializer.data)
+
+
+class ChangePassword(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        user = request.user
+        old_password = request.data.get("old_password")
+        new_password = request.data.get("new_password")
+        new_password2 = request.data.get("new_password2")
+        if not old_password or not new_password or not new_password2:
+            raise ParseError
+        if len(new_password) < 8:
+            raise ValidationError(
+                "This password is too short. It must contain at least 8 character.")
+        if new_password.isdigit():
+            raise ValidationError(
+                "This password is entirely numeric")
+        if new_password != new_password2:
+            raise ValidationError("Passwords not equal.")
+        if user.check_password(old_password):
+            user.set_password(new_password)
+            user.save()
+            return Response(status=status.HTTP_200_OK)
+
+        else:
+            raise ParseError
+
+
+class LogIn(APIView):
+    def post(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+        if not username or not password:
+            raise ParseError
+        user = authenticate(
+            request,
+            username=username,
+            password=password,
+        )
+        if user:
+            login(request, user)
+            return Response({"ok": "Welcome!"})
+        else:
+            return Response({"error": "Wrong password or ID"})
+
+
+class LogOut(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        logout(request)
+        return Response({"ok": "Bye!"})
+
+
+class JWTLogin(APIView):
+    def post(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+        if not username or not password:
+            raise ParseError
+        user = authenticate(
+            request,
+            username=username,
+            password=password,
+        )
+        if user:
+            token = jwt.encode(
+                {"pk": user.pk},
+                settings.SECRET_KEY,
+                algorithm="HS256",
+            )
+            return Response({"token": token})
+        else:
+            return Response({"error": "wrong password"})

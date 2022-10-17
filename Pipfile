@@ -8,6 +8,11 @@ django = "*"
 black = "*"
 pillow = "*"
 djangorestframework = "*"
+strawberry-graphql = {extras = ["debug-server"], version = "*"}
+strawberry-graphql-django = "*"
+pyjwt = "*"
+django-environ = "*"
+djangorestframework-simplejwt = "*"
 
 [dev-packages]
 black = "*"

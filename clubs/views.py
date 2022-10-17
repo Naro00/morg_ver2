@@ -3,8 +3,8 @@ from rest_framework.views import APIView
 from django.db import transaction
 from rest_framework.response import Response
 from rest_framework.exceptions import (
-    NotFound, NotAuthenticated, ParseError, PermissionDenied,)
-from rest_framework.status import HTTP_204_NO_CONTENT
+    NotFound, ParseError, PermissionDenied,)
+from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 from .models import Amenity, Club
 from categories.models import Category
 from .serializers import AmenitySerializer, ClubListSerializer, ClubDetailSerializer
@@ -28,7 +28,7 @@ class Amenities(APIView):
                 AmenitySerializer(amenity).data,
             )
         else:
-            return Response(serializer.errors)
+            return Response(serializer.errors, status=HTTP_400_BAD_REQUEST,)
 
 
 class AmenityDetail(APIView):
@@ -52,7 +52,7 @@ class AmenityDetail(APIView):
             update_amenity = serializer.save()
             return Response(AmenitySerializer(update_amenity).data)
         else:
-            return Response(serializer.errors)
+            return Response(serializer.errors, status=HTTP_400_BAD_REQUEST,)
 
     def delete(self, request, pk):
         amenity = self.get_object(pk)
@@ -118,7 +118,7 @@ class Clubs(APIView):
             except Exception:
                 raise ParseError("Amenity not found.")
         else:
-            return Response(serializer.errors)
+            return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
 
 class ClubDetail(APIView):
