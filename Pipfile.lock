@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "db4b265c1168cea7e99699bb66a15d50571b63e4764829e1b65af4c1094740c0"
+            "sha256": "dbf494fc07ead9f9ccf5c8887d1379252e09e028075febaa62ac743333a38e7d"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -83,6 +83,14 @@
             "index": "pypi",
             "version": "==4.1.2"
         },
+        "django-cors-headers": {
+            "hashes": [
+                "sha256:37e42883b5f1f2295df6b4bba96eb2417a14a03270cb24b2a07f021cd4487cf4",
+                "sha256:f9dc6b4e3f611c3199700b3e5f3398c28757dcd559c2f82932687f3d0443cfdf"
+            ],
+            "index": "pypi",
+            "version": "==3.13.0"
+        },
         "django-environ": {
             "hashes": [
                 "sha256:bff5381533056328c9ac02f71790bd5bf1cea81b1beeb648f28b81c9e83e0a21",
@@ -112,7 +120,7 @@
                 "sha256:06d2aad0ac723e35b1cb47885d3e5c45e956a53bc1b209a9fc5369007fe46676",
                 "sha256:5766780452bd5ec8ba133f8bf287dc92713e3868ddd83aee4faab9fc3e303dc3"
             ],
-            "markers": "python_version >= '3.6' and python_version < '4'",
+            "markers": "python_version >= '3.6' and python_version < '4.0'",
             "version": "==3.2.3"
         },
         "h11": {
@@ -290,19 +298,19 @@
                 "debug-server"
             ],
             "hashes": [
-                "sha256:78e5d2e54f9ce7211740e807057c14ce16ad4e4b65844a80f7463e75d79624c8",
-                "sha256:883ffbb98590d03535f8a291b8cde330fdcfbccd46b61703a1f8961d8bf3f410"
+                "sha256:6d45cb8e1f0d7060784a7d29757f52d6ac4581a5d1b65e15ba69383d29abbb21",
+                "sha256:d0fe16190a0874b1f95b73827f230f4f8bbe25baaa97eb2fcb4cfdd00f0c6b92"
             ],
             "index": "pypi",
-            "version": "==0.134.0.dev1664917721"
+            "version": "==0.134.3"
         },
         "strawberry-graphql-django": {
             "hashes": [
-                "sha256:8b236a33b664f72afb6a818465b592be88ecbfcbaf039665e9f6ed1171b41c99",
-                "sha256:c8b3e226bef276e574461afba47d6ecbde2607c0a40586cde5ac92400708decd"
+                "sha256:230abc20a33f9c05379b1695fa393a708ab7da63cec51689d0588babaee46d17",
+                "sha256:ec2124c4922282155370dec5962daf9d639a1ef7508574c3c8cb806711cd1b08"
             ],
             "index": "pypi",
-            "version": "==0.6"
+            "version": "==0.7"
         },
         "tomli": {
             "hashes": [

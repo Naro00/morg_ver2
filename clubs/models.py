@@ -32,7 +32,7 @@ class Club(CommonModel):
     )
 
     price = models.PositiveIntegerField()
-    clubs = models.PositiveIntegerField()
+    locker_room = models.PositiveIntegerField()
     toilets = models.PositiveIntegerField()
     description = models.TextField(
         max_length=150,

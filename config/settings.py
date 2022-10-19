@@ -50,6 +50,7 @@ THIRD_PARTY_APPS = [
     "rest_framework.authtoken",
     'rest_framework_simplejwt',
     "strawberry.django",
+    "corsheaders",
 ]
 
 
@@ -71,6 +72,7 @@ INSTALLED_APPS = SYSTEM_APPS + THIRD_PARTY_APPS + CUSTOM_APPS
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -178,3 +180,5 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('JWT',),
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.UntypedToken',),
 }
+
+CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]

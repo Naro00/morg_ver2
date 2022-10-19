@@ -35,7 +35,9 @@ class ClubDetailSerializer(serializers.ModelSerializer):
 
     def get_is_liked(self, club):
         request = self.context["request"]
-        return Wishlist.objects.filter(user=request.user, clubs__pk=club.pk,).exists()
+        if request.user.is_authenticated:
+            return Wishlist.objects.filter(user=request.user, clubs__pk=club.pk,).exists()
+        return False
 
 
 class ClubListSerializer(serializers.ModelSerializer):
