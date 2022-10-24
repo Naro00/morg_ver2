@@ -1,4 +1,8 @@
+from email import message
+from pyexpat.errors import messages
 import jwt
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.http import JsonResponse
 import requests
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
@@ -48,15 +52,39 @@ class Users(APIView):
                 "This password is entirely numeric")
         if password != password2:
             raise ValidationError("Passwords not equal.")
-        serializer = serializers.PrivateUserSerializer(data=request.data)
+        serializer = serializers.UserSignUpSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             user.set_password(password)
             user.save()
-            serializer = serializers.PrivateUserSerializer(user)
+
+            serializer = serializers.UserSignUpSerializer(user)
             return Response(serializer.data)
         else:
             return Response(serializer.errors)
+
+
+class JWTSignup(APIView):
+    serializer_class = serializers.JWTSignupSerializer
+
+    def post(self, request):
+        password = request.data.get("password")
+        password2 = request.data.get("password2")
+        if password != password2:
+            raise ValidationError("Passwords not equal.")
+        serializer = serializers.JWTSignupSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
+
+        if serializer.is_valid(raise_exception=False):
+            user = serializer.save(request)
+            token = RefreshToken.for_user(user)
+            refresh = str(token)
+            access = str(token.access_token)
+
+            return Response({"user": user, "access": access, "refresh": refresh},
+                            status=status.HTTP_200_OK,)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST,)
 
 
 class PublicUser(APIView):
@@ -66,7 +94,7 @@ class PublicUser(APIView):
             user = User.objects.get(username=username)
         except User.DoesNotExist:
             raise NotFound
-        serializer = serializers.Publicserializer(user)
+        serializer = serializers.PrivateUserSerializer(user)
         return Response(serializer.data)
 
 
@@ -112,7 +140,8 @@ class LogIn(APIView):
             login(request, user)
             return Response({"ok": "Welcome!"})
         else:
-            return Response({"error": "Wrong password or ID"})
+            return Response({"error": "Wrong password or ID"},
+                            status=status.HTTP_400_BAD_REQUEST,)
 
 
 class LogOut(APIView):
@@ -153,13 +182,14 @@ class KakaoLogIn(APIView):
             access_token = requests.post(
                 "https://kauth.kakao.com/oauth/token",
                 headers={
-                    "Content-Type": "application/x-www-form-urlencoded"},
+                    "Content-Type": "application/x-www-form-urlencoded;charset=utf-8"},
                 data={
                     "grant_type": "authorization_code",
                     "client_id": "e9f6311ab57aac58e2de4e392b18b49c",
                     "redirect_uri": "http://127.0.0.1:3000/social/kakao",
                     "code": code,
-                },)
+                },
+            )
             access_token = access_token.json().get("access_token")
             user_data = requests.get(
                 "https://kapi.kakao.com/v2/user/me",
@@ -184,7 +214,8 @@ class KakaoLogIn(APIView):
                 )
                 user.set_unusable_password()
                 user.save()
-                login(request.user)
+                login(request, user)
                 return Response(status=status.HTTP_200_OK)
-        except Exception:
+        except Exception as e:
+            print(e)
             return Response(status=status.HTTP_400_BAD_REQUEST)
