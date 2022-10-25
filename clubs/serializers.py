@@ -9,7 +9,7 @@ from wishlists.models import Wishlist
 class AmenitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Amenity
-        fields = ("name", "description",)
+        fields = ("pk", "name", "description",)
 
 
 class ClubDetailSerializer(serializers.ModelSerializer):
@@ -30,13 +30,16 @@ class ClubDetailSerializer(serializers.ModelSerializer):
         return club.rating()
 
     def get_is_owner(self, club):
-        request = self.context["request"]
-        return club.owner == request.user
+        request = self.context.get("request")
+        if request:
+            return club.owner == request.user
+        return False
 
     def get_is_liked(self, club):
-        request = self.context["request"]
-        if request.user.is_authenticated:
-            return Wishlist.objects.filter(user=request.user, clubs__pk=club.pk,).exists()
+        request = self.context.get("request")
+        if request:
+            if request.user.is_authenticated:
+                return Wishlist.objects.filter(user=request.user, clubs__pk=club.pk,).exists()
         return False
 
 

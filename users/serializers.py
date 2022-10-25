@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
+from django.contrib.auth import password_validation
 from .models import User
 
 
@@ -71,6 +72,34 @@ class JWTSignupSerializer(ModelSerializer):
             "email",
         )
 
+    def clean_email(self, data):
+        email = self.data.get("email")
+        if User.objects.get(email=email):
+            raise serializers.ValidationError(
+                "That email is already taken", code="existing_user"
+            )
+        else:
+            return email
+
+    def clean_password1(self, data):
+        password = self.data.get("password")
+        password1 = self.data.get("password1")
+
+        if password != password1:
+            raise serializers.ValidationError(
+                "Password confirmation does not match")
+        else:
+            return password
+
+    def _post_clean(self, data):
+        super()._post_clean()
+        password = self.data.get("password1")
+        if password:
+            try:
+                password_validation.validate_password(password, self.instance)
+            except serializers.ValidationError as error:
+                self.add_error("password1", error)
+
     def save(self, request):
         user = super().save()
 
@@ -82,14 +111,6 @@ class JWTSignupSerializer(ModelSerializer):
         user.save()
 
         return user
-
-    def validate(self, data):
-        username = data.get("username", None)
-
-        if User.objects.filter(username=username).exists():
-            raise serializers.ValidationError("user already exists")
-
-        return data
 
 
 class Publicserializer(ModelSerializer):

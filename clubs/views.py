@@ -1,3 +1,4 @@
+from multiprocessing import context
 from django.conf import settings
 from rest_framework.views import APIView
 from django.db import transaction
@@ -113,7 +114,8 @@ class Clubs(APIView):
                 for amenity_pk in amenities:
                     amenity = Amenity.objects.get(pk=amenity_pk)
                     club.amenities.add(amenity)
-                serializer = ClubDetailSerializer(club)
+                serializer = ClubDetailSerializer(
+                    club, context={"request": request},)
                 return Response(serializer.data)
             except Exception:
                 raise ParseError("Amenity not found.")

@@ -1,5 +1,4 @@
 from email import message
-from pyexpat.errors import messages
 import jwt
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.http import JsonResponse
@@ -40,32 +39,29 @@ class Me(APIView):
 
 class Users(APIView):
     def post(self, request):
-        password = request.data.get("password")
-        password2 = request.data.get("password2")
-        if not password:
-            raise ParseError
-        if len(password) < 8:
-            raise ValidationError(
-                "This password is too short. It must contain at least 8 character.")
-        if password.isdigit():
-            raise ValidationError(
-                "This password is entirely numeric")
-        if password != password2:
-            raise ValidationError("Passwords not equal.")
-        serializer = serializers.UserSignUpSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            user.set_password(password)
-            user.save()
+        serializer = serializers.JWTSignupSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=False):
+            user = serializer.save(request)
+            login(self.request, user)
 
-            serializer = serializers.UserSignUpSerializer(user)
+            serializer = serializers.JWTSignupSerializer(user)
             return Response(serializer.data)
         else:
             return Response(serializer.errors)
 
 
+def complete_verification(requset, key):
+    try:
+        user = User.objects.get(email_secret=key)
+        user.email_verified = True
+        user.email_secret = ""
+        user.save()
+    except User.DoesNotExist:
+        pass
+    return Response(status=status.HTTP_200_OK)
+
+
 class JWTSignup(APIView):
-    serializer_class = serializers.JWTSignupSerializer
 
     def post(self, request):
         password = request.data.get("password")
@@ -73,7 +69,6 @@ class JWTSignup(APIView):
         if password != password2:
             raise ValidationError("Passwords not equal.")
         serializer = serializers.JWTSignupSerializer(data=request.data)
-        serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid(raise_exception=False):
             user = serializer.save(request)
@@ -81,8 +76,10 @@ class JWTSignup(APIView):
             refresh = str(token)
             access = str(token.access_token)
 
-            return Response({"user": user, "access": access, "refresh": refresh},
-                            status=status.HTTP_200_OK,)
+            serializer = serializers.JWTSignupSerializer(user)
+
+            return JsonResponse({"user": serializer.data, "access": access, "refresh": refresh},
+                                status=status.HTTP_200_OK,)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST,)
 
@@ -182,7 +179,7 @@ class KakaoLogIn(APIView):
             access_token = requests.post(
                 "https://kauth.kakao.com/oauth/token",
                 headers={
-                    "Content-Type": "application/x-www-form-urlencoded;charset=utf-8"},
+                    "Content-Type": "application/x-www-form-urlencoded"},
                 data={
                     "grant_type": "authorization_code",
                     "client_id": "e9f6311ab57aac58e2de4e392b18b49c",
@@ -190,6 +187,7 @@ class KakaoLogIn(APIView):
                     "code": code,
                 },
             )
+            print(access_token.json())
             access_token = access_token.json().get("access_token")
             user_data = requests.get(
                 "https://kapi.kakao.com/v2/user/me",
@@ -198,19 +196,21 @@ class KakaoLogIn(APIView):
                     "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
                 },
             )
+            print(user_data.json())
             user_data = user_data.json()
-            kakao_acount = user_data.get("kakao_acount")
-            profile = kakao_acount.get("profile")
+            email = user_data.get("kakao_account").get("email", None)
+            properties = user_data.get("properties")
             try:
-                user = User.objects.get(email=kakao_acount.get("email"))
+                user = User.objects.get(email=email)
                 login(request, user)
                 return Response(status=status.HTTP_200_OK)
             except User.DoesNotExist:
                 user = User.objects.create(
-                    email=kakao_acount.get("email"),
-                    username=profile.get("nickname"),
-                    name=profile.get("nickname"),
-                    avatar=profile.get("profile_image_url"),
+                    email=email,
+                    username=properties.get("nickname"),
+                    name=properties.get("nickname"),
+                    avatar=properties.get("profile_image_url"),
+                    email_verified=True,
                 )
                 user.set_unusable_password()
                 user.save()
