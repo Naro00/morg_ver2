@@ -188,7 +188,7 @@ class ClubReviews(APIView):
             review = serializer.save(
                 user=request.user, club=self.get_object(pk),)
             serializer = ReviewSerializer(review)
-            return Response(serializer.data)
+        return Response(serializer.data)
 
 
 class ClubPhotos(APIView):

@@ -169,7 +169,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
         "config.authentication.JWTAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ],
+    ]
 }
 
 REST_USE_JWT = True

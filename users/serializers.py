@@ -72,15 +72,6 @@ class JWTSignupSerializer(ModelSerializer):
             "email",
         )
 
-    def clean_email(self, data):
-        email = self.data.get("email")
-        if User.objects.get(email=email):
-            raise serializers.ValidationError(
-                "That email is already taken", code="existing_user"
-            )
-        else:
-            return email
-
     def clean_password1(self, data):
         password = self.data.get("password")
         password1 = self.data.get("password1")

@@ -1,4 +1,3 @@
-from email import message
 import jwt
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.http import JsonResponse
@@ -39,6 +38,12 @@ class Me(APIView):
 
 class Users(APIView):
     def post(self, request):
+        email = request.data.get("email")
+        username = request.data.get("username")
+        if User.objects.filter(email=email):
+            raise ValidationError("이미 존재하는 이메일 입니다.")
+        if User.objects.filter(username=username):
+            raise ValidationError("이미 존재하는 아이디 입니다.")
         serializer = serializers.JWTSignupSerializer(data=request.data)
         if serializer.is_valid(raise_exception=False):
             user = serializer.save(request)

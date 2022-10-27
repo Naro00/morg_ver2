@@ -1,3 +1,5 @@
+from email.policy import default
+from unittest.util import _MAX_LENGTH
 from django.db import models
 from common.models import CommonModel
 
@@ -35,7 +37,7 @@ class Club(CommonModel):
     locker_room = models.PositiveIntegerField()
     toilets = models.PositiveIntegerField()
     description = models.TextField(
-        max_length=150,
+        max_length=300,
         null=True,
         blank=True,
     )
@@ -60,6 +62,9 @@ class Club(CommonModel):
         on_delete=models.SET_NULL,
         related_name="clubs",
     )
+
+    open_time = models.CharField(null=True, default="", max_length=20,)
+    close_time = models.CharField(null=True, default="", max_length=20,)
 
     def __str__(self):
         return self.name
